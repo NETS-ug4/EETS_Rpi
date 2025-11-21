@@ -4,7 +4,7 @@ from datetime import datetime
 root = tk.Tk()
 root.title("EETS Simulator")
 root.geometry("950x550")
-root.configure(bg="#1BF514")   # Blue background
+root.configure(bg="#003153")   # Blue background
 
 # ==================================================
 # TIMER VARIABLES
