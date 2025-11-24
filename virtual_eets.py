@@ -1,14 +1,65 @@
+import RPi.GPIO as GPIO
 import tkinter as tk
 from datetime import datetime
+from motor import ULN2003Stepper
+import time
+# -----------------------------
+# GPIO Setup
+# -----------------------------
 
+
+# Initialize devices
+motor1 = ULN2003Stepper([4, 17, 27, 22])
+motor2 = ULN2003Stepper([5, 6, 13, 19])
+
+# -----------------------------
+# Basic Button Functions
+# -----------------------------
+
+# ---------------------z--------
+# Button Motor Functions
+# -----------------------------
+def previous_module():
+    print("Motor rotate 60 degree Backward")
+    motor1.move("CCW", 5, 30)   # clockwise, medium speed, 90 degrees
+    time.sleep(1)
+
+def next_module():
+    print("Motor rotate 60 degree Forward")
+    motor1.move("CW", 5, 30)   # clockwise, medium speed, 90 degrees
+    time.sleep(1)
+
+def back15():
+    print("Motor rotate 15 degree Backward")
+    motor1.move("CCW", 5, 15)   # clockwise, medium speed, 90 degrees
+    time.sleep(1)
+
+def next15():
+    print("Motor rotate 15 degree Forward")
+    motor1.move("CW", 5, 15)   # clockwise, medium speed, 90 degrees
+    time.sleep(1)
+
+def up_module():
+    print("Motor UP")
+    motor2.move("CW", 6, 10)   # clockwise, medium speed, 90 degrees
+    time.sleep(1)
+
+def down_module():
+    print("Motor DOWN")
+    motor2.move("CCW", 6, 10)   # clockwise, medium speed, 90 degrees
+    time.sleep(1)
+
+# -----------------------------
+# Window Setup
+# -----------------------------
 root = tk.Tk()
 root.title("EETS Simulator")
 root.geometry("950x550")
-root.configure(bg="#003153")   # Blue background
+root.configure(bg="#003153")
 
-# ==================================================
-# TIMER VARIABLES
-# ==================================================
+# -----------------------------
+# TIMERS
+# -----------------------------
 timer_running = False
 timer_value = 0
 
@@ -19,25 +70,15 @@ def update_timer():
         timer_box.config(text=str(timer_value))
     root.after(1000, update_timer)
 
-# ==================================================
-# CLOCK
-# ==================================================
-def update_clock():
-    now = datetime.now()
-    date_value.config(text=now.strftime("%d-%m-%Y"))
-    time_value.config(text=now.strftime("%H:%M:%S"))
-    root.after(1000, update_clock)
-
-# ==================================================
-# START / PAUSE / STOP
-# ==================================================
 def start_timer():
+    print("Start Timer")
     global timer_running
     timer_running = True
 
 def pause_timer():
     global timer_running
     timer_running = False
+    
 
 def stop_timer():
     global timer_running, timer_value
@@ -45,68 +86,78 @@ def stop_timer():
     timer_value = 0
     timer_box.config(text="0")
 
-# ==================================================
+# -----------------------------
+# CLOCK
+# -----------------------------
+def update_clock():
+    now = datetime.now()
+    date_value.config(text=now.strftime("%d-%m-%Y"))
+    time_value.config(text=now.strftime("%H:%M:%S"))
+    root.after(1000, update_clock)
+
+# -----------------------------
 # TOP BAR
-# ==================================================
-title = tk.Label(root, text="EETS Simulator", font=("Arial", 28, "bold"),
-                 bg="#fcfcfc", fg="#000000")
+# -----------------------------
+title = tk.Label(root, text="EETS Simulator NETS-AIIMS",
+                 font=("Arial", 28, "bold"), bg="#fcfcfc", fg="black")
 title.pack(pady=10)
 
-datetime_frame = tk.Frame(root, bg="#FFFFFF")
+datetime_frame = tk.Frame(root, bg="white")
 datetime_frame.place(x=770, y=20)
 
-date_label = tk.Label(datetime_frame, text="Date:", font=("Arial", 12), bg="white")
-date_label.grid(row=0, column=0, padx=5, pady=2)
+tk.Label(datetime_frame, text="Date:", bg="white").grid(row=0, column=0)
+date_value = tk.Label(datetime_frame, text="", bg="white", font=("Arial", 12, "bold"))
+date_value.grid(row=0, column=1)
 
-date_value = tk.Label(datetime_frame, text="", font=("Arial", 12, "bold"), bg="white")
-date_value.grid(row=0, column=1, padx=5)
+tk.Label(datetime_frame, text="Time:", bg="white").grid(row=1, column=0)
+time_value = tk.Label(datetime_frame, text="", bg="white", font=("Arial", 12, "bold"))
+time_value.grid(row=1, column=1)
 
-time_label = tk.Label(datetime_frame, text="Time:", font=("Arial", 12), bg="white")
-time_label.grid(row=1, column=0, padx=5, pady=2)
+update_clock()
 
-time_value = tk.Label(datetime_frame, text="", font=("Arial", 12, "bold"), bg="white")
-time_value.grid(row=1, column=1, padx=5)
-
-update_clock()   # Start real time clock
-
-# ==================================================
+# -----------------------------
 # START BUTTON
-# ==================================================
+# -----------------------------
 start_btn = tk.Button(root, text="Start", font=("Arial", 18),
                       bg="#c69c6d", width=10, command=start_timer)
-start_btn.pack(pady=10)
+start_btn.pack(padx=20, pady=20)
 
-# ==================================================
-# LEFT PANEL – CONTROLLERS
-# ==================================================
+# -----------------------------
+# LEFT FRAME (Motor Controllers)
+# -----------------------------
 left_frame = tk.Frame(root, bg="#003153")
 left_frame.place(x=40, y=140)
 
-tk.Label(left_frame, text="Controllers", font=("Arial", 18, "bold"),
-         bg="#003153", fg="white").grid(row=0, column=0, columnspan=3, pady=10)
-tk.Button(left_frame, text="Previous\nmodule", font=("Arial", 14), width=12)\
-    .grid(row=1, column=0, padx=10, pady=8)
-tk.Button(left_frame, text="Next\nmodule", font=("Arial", 14), width=12)\
-    .grid(row=1, column=1, padx=10, pady=8)
+tk.Label(left_frame, text="Motor Controllers", font=("Arial", 18, "bold"),
+         bg="#003153", fg="white").grid(row=0, column=0, columnspan=2, pady=10)
 
-tk.Button(left_frame, text="-5", font=("Arial", 14), width=4)\
-    .grid(row=2, column=0, padx=5, pady=8)
-label = tk.Label(left_frame, text="Fine tune", font=("Arial", 14),
-         bg="#003153", fg="white")
-label.place(x=120, y=150)
-tk.Button(left_frame, text="+5", font=("Arial", 14), width=4)\
-    .grid(row=2, column=1, padx=5, pady=8)
+tk.Button(left_frame, text="Previous\nmodule", font=("Arial", 14), width=12,
+          command=previous_module).grid(row=1, column=0, padx=10, pady=5)
 
-tk.Button(left_frame, text="UP", font=("Arial", 14), width=10)\
-    .grid(row=3, column=0, columnspan=3, pady=10)
+tk.Button(left_frame, text="Next\nmodule", font=("Arial", 14), width=12,
+          command=next_module).grid(row=1, column=1, padx=10, pady=5)
+
+tk.Button(left_frame, text="-5", font=("Arial", 14), width=4,
+          command=back15).grid(row=2, column=0, padx=10, pady=5)
+
+tk.Button(left_frame, text="+5", font=("Arial", 14), width=4,
+          command=next15).grid(row=2, column=1, padx=10, pady=5)
+
+tk.Label(left_frame, text="Fine tune", font=("Arial", 14),
+         bg="#003153", fg="white").grid(row=3, column=0, columnspan=2, pady=5)
+
+tk.Button(left_frame, text="UP", font=("Arial", 14), width=10,
+          command=up_module).grid(row=4, column=0, columnspan=2, pady=8)
+
 tk.Label(left_frame, text="Plane", font=("Arial", 14),
-         bg="#003153", fg="white").grid(row=4, column=0, columnspan=3)
-tk.Button(left_frame, text="DOWN", font=("Arial", 14), width=10)\
-    .grid(row=5, column=0, columnspan=3, pady=10)
+         bg="#003153", fg="white").grid(row=5, column=0, columnspan=2, pady=5)
 
-# ==================================================
-# RIGHT PANEL – TIMER, SNAPSHOT, RECORDING
-# ==================================================
+tk.Button(left_frame, text="DOWN", font=("Arial", 14), width=10,
+          command=down_module).grid(row=6, column=0, columnspan=2, pady=8)
+
+# -----------------------------
+# RIGHT FRAME (Timer, Snapshot)
+# -----------------------------
 right_frame = tk.Frame(root, bg="#003153")
 right_frame.place(x=600, y=140)
 
@@ -119,8 +170,8 @@ timer_box.grid(row=0, column=1, padx=10)
 
 tk.Label(right_frame, text="Snapshot", font=("Arial", 18, "bold"),
          fg="orange", bg="#003153").grid(row=1, column=0, pady=20)
-tk.Button(right_frame, text="📸", font=("Arial", 20), width=3)\
-    .grid(row=1, column=1)
+
+tk.Button(right_frame, text="📸", font=("Arial", 20), width=3).grid(row=1, column=1)
 
 tk.Label(right_frame, text="Recordings", font=("Arial", 18, "bold"),
          bg="#003153", fg="white").grid(row=2, column=0, columnspan=2, pady=20)
@@ -128,12 +179,15 @@ tk.Label(right_frame, text="Recordings", font=("Arial", 18, "bold"),
 rec_frame = tk.Frame(right_frame, bg="#003153")
 rec_frame.grid(row=3, column=0, columnspan=2)
 
-tk.Button(rec_frame, text="Record", font=("Arial", 14), width=8, command=start_timer)\
-    .grid(row=0, column=0, padx=5)
-tk.Button(rec_frame, text="Pause", font=("Arial", 14), width=8, command=pause_timer)\
-    .grid(row=0, column=1, padx=5)
-tk.Button(rec_frame, text="Stop", font=("Arial", 14), width=8, command=stop_timer)\
-    .grid(row=0, column=2, padx=5)
+tk.Button(rec_frame, text="Record", font=("Arial", 14), width=8,
+          command=start_timer).grid(row=0, column=0, padx=5)
+
+tk.Button(rec_frame, text="Pause", font=("Arial", 14), width=8,
+          command=pause_timer).grid(row=0, column=1, padx=5)
+
+tk.Button(rec_frame, text="Stop", font=("Arial", 14), width=8,
+          command=stop_timer).grid(row=0, column=2, padx=5)
+
 
 # Start timer loop
 update_timer()
